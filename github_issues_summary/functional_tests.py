@@ -27,7 +27,7 @@ class SueVisitorTest(unittest.TestCase):
                 "section#main_content h1"
                 )
         self.assertEqual(main_heading.text, "Github Issues")
-        issues_table = self.browser.find_element_by_id(
+        self.browser.find_element_by_id(
                 "issues_table"
                 )
 
@@ -94,7 +94,7 @@ class SueVisitorTest(unittest.TestCase):
         number_present = False
         for gh_number in gh_numbers:
             if gh_number.text == '657':
-                present = True
+                number_present = True
         self.assertTrue(number_present)
 
 
