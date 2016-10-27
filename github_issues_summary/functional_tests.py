@@ -33,32 +33,58 @@ class SueVisitorTest(unittest.TestCase):
 
         # The table of issues has a number of useful standard columns. There is
         # a column for Client Name
-
-        self.fail("Finish the test")
+        client_column = self.browser.find_element_by_id(
+                "client_column"
+                )
+        self.assertEqual(client_column.text, "Client Name")
 
         # There is a column for Action item/Request
-        self.fail("Finish the test")
+        action_column = self.browser.find_element_by_id(
+                "action_column"
+                )
+        self.assertEqual(action_column.text, u"Action item/Request")
 
         # There is a column for Description
-        self.fail("Finish the test")
+        description_column = self.browser.find_element_by_id(
+                "description_column"
+                )
+        self.assertEqual(description_column.text, "Description")
 
         # There is a column for GH Number
-        self.fail("Finish the test")
+        gh_column = self.browser.find_element_by_id(
+                "gh_column"
+                )
+        self.assertEqual(gh_column.text, "GH number")
 
         # There is a column for Priority
-        self.fail("Finish the test")
+        priority_column = self.browser.find_element_by_id(
+                "priority_column"
+                )
+        self.assertEqual(priority_column.text, "Priority")
 
         # There is a column for Category
-        self.fail("Finish the test")
+        category_column = self.browser.find_element_by_id(
+                "category_column"
+                )
+        self.assertEqual(category_column.text, "Category")
 
         # There is a column for Assigned To
-        self.fail("Finish the test")
+        assigned_column = self.browser.find_element_by_id(
+                "assigned_column"
+                )
+        self.assertEqual(assigned_column.text, "Assigned To")
 
         # There is a column for Comments
-        self.fail("Finish the test")
+        comments_column = self.browser.find_element_by_id(
+                "comments_column"
+                )
+        self.assertEqual(comments_column.text, "Comments")
 
         # There is a column for Status
-        self.fail("Finish the test")
+        status_column = self.browser.find_element_by_id(
+                "status_column"
+                )
+        self.assertEqual(status_column.text, "Status")
 
         # Sue can't see any way to edit the information shown and wonders if
         # she needs to be authorised to make changes. Then she notices a small

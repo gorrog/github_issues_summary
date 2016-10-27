@@ -27,6 +27,35 @@ html = """
                     you'll be able to add a new issue or edit existing issues.
                 </caption
                 <thead>
+                    <tr>
+                        <th id="client_column">
+                           Client Name
+                        </th>
+                        <th id="action_column">
+                           Action item/Request
+                        </th>
+                        <th id="description_column">
+                           Description
+                        </th>
+                        <th id="gh_column">
+                           GH number
+                        </th>
+                        <th id="priority_column">
+                           Priority
+                        </th>
+                        <th id="category_column">
+                           Category
+                        </th>
+                        <th id="assigned_column">
+                           Assigned To
+                        </th>
+                        <th id="comments_column">
+                           Comments
+                        </th>
+                        <th id="status_column">
+                           Status
+                        </th>
+                    </tr>
                 </thead>
                 <tbody>
                 </tbody>
