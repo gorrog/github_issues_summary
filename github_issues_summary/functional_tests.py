@@ -27,12 +27,13 @@ class SueVisitorTest(unittest.TestCase):
                 "section#main_content h1"
                 )
         self.assertEqual(main_heading.text, "Github Issues")
-        issues_table = self.browser.find_element_by_css_selector(
-                "section#main_content table"
+        issues_table = self.browser.find_element_by_id(
+                "issues_table"
                 )
 
         # The table of issues has a number of useful standard columns. There is
         # a column for Client Name
+
         self.fail("Finish the test")
 
         # There is a column for Action item/Request

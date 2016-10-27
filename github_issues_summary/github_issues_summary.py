@@ -21,7 +21,7 @@ html = """
             <h1>
                 Github Issues
             </h1>
-            <table border='1'>
+            <table border='1' id='issues_table'>
                 <caption>
                     List of issues in Github Repo '{repo}'. If you log in,
                     you'll be able to add a new issue or edit existing issues.
