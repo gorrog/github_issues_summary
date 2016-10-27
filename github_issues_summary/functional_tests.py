@@ -23,7 +23,13 @@ class SueVisitorTest(unittest.TestCase):
 
         # Sue can see a table summarising all the issues preceded by a heading
         # that says 'Github issues'.
-        self.fail("Finish the test")
+        main_heading = self.browser.find_element_by_css_selector(
+                "section#main_content h1"
+                )
+        self.assertEqual(main_heading.text, "Github Issues")
+        issues_table = self.browser.find_element_by_css_selector(
+                "section#main_content table"
+                )
 
         # The table of issues has a number of useful standard columns. There is
         # a column for Client Name

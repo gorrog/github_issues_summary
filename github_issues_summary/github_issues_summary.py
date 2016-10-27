@@ -17,6 +17,21 @@ html = """
         </title>
     </head>
     <body>
+        <section id="main_content">
+            <h1>
+                Github Issues
+            </h1>
+            <table border='1'>
+                <caption>
+                    List of issues in Github Repo '{repo}'. If you log in,
+                    you'll be able to add a new issue or edit existing issues.
+                </caption
+                <thead>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </section>
     </body>
 </html>
 """
