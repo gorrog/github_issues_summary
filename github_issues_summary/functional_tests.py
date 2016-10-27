@@ -215,4 +215,5 @@ class SueVisitorTest(unittest.TestCase):
         # she closes her web browser.
         self.fail("Finish the test")
 
-if __name__ == "__main__": unittest.main()
+if __name__ == "__main__":
+    unittest.main()
