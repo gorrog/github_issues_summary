@@ -171,14 +171,24 @@ for issue in issues:
         assigned_string += issue['assignees']
 
     ## Comments Data ##
-    # Get 'comments' fields
     comments_string = ""
-    if isinstance(issue['comments'],list):
-        for comment in issue['comments']:
-            comments_string += (str(comment) + "\n")
-        comments_string = comments_string.strip('\n')
-    else:
-        comments_string += str(issue['comments'])
+    if issue['comments'] > 0:
+        # We have comments. Retrieve them.
+        comments_url = issue['comments_url']
+        comments = requests.get(comments_url).json()
+        for comment in comments:
+            # e.g. Johnny12 @ 2015-11-03T09:32:12 : "Comment"
+            tmp_string = '''
+            <p>
+                {user} @ {timestamp} : "{comment}"
+            </p>
+            '''
+            tmp_string = tmp_string.format(
+                    user = comment['user']['login'],
+                    timestamp = comment['updated_at'],
+                    comment = comment['body']
+                    )
+            comments_string += tmp_string
 
     ## Status Data ##
     # Get labels starting with '1:', '2:', '3:' or '4:'- these signify
@@ -206,11 +216,12 @@ for issue in issues:
         status_string = status_string
         ))
 
+tbody_string = clean_html(tbody_string)
+
 html = html.format(
         repo_string=GITHUB_REPO,
         tbody_string=tbody_string
         )
-html = clean_html(html)
 
 print(html)
 
