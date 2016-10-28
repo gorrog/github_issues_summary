@@ -11,8 +11,20 @@ import requests
 
 from lxml.html.clean import clean_html
 
+# Settings
 GITHUB_USERNAME = 'WorkAtSwordfish'
 GITHUB_REPO = 'GitIntegration'
+
+# Initialise variables
+logged_in = False
+nav_string = ""
+tbody_string = ""
+issues_url = "https://api.github.com/repos/{}/{}/issues".format(
+        GITHUB_USERNAME,
+        GITHUB_REPO
+        )
+
+########################## FUNCTIONS ############################
 
 def filter_labels(labels_list, prefix):
     filtered_labels = []
@@ -24,19 +36,16 @@ def filter_labels(labels_list, prefix):
             filtered_labels.append(clean_label)
     return filtered_labels
 
-def get_page_links(request):
+def get_page_links(root_issues_url):
     '''
     Github limits each request to 30 issues. This function returns a list of
     links for all subsequent pages of results"
     '''
+    response = requests.get(issues_url)
     # First, we need to find the link with associated 'rel="last"' This will
     # give us the last page number
     last_page = 0
-    original_base_url = "https://api.github.com/repos/{}/{}/issues".format(
-        GITHUB_USERNAME,
-        GITHUB_REPO
-        )
-    links_list =request.headers['link'].split(',')
+    links_list =response.headers['link'].split(',')
     for link in links_list:
         link_parts = link.split(';')
         rel_label = link_parts[1].strip(" rel=").strip('"')
@@ -50,7 +59,7 @@ def get_page_links(request):
     page_links_list = []
     if last_page == 0:
         # We only have 1 page of issues
-        page_links_list.append(original_base_url)
+        page_links_list.append(root_issues_url)
     if last_page >0:
         for page in range(1, last_page+1):
             url = new_base_url + "?page=" + str(page)
@@ -59,6 +68,46 @@ def get_page_links(request):
         # Something has gone wrong.
         raise Exception("we couldn't construct a page list")
     return(page_links_list)
+
+def get_nav_items(url):
+    """
+    This function will return a dictionary of navigation items based on the
+    'first', 'previous', 'next' and 'last' page links optionally provided in
+    the header of each response
+    """
+    response = requests.get(url)
+    nav_items_dict = {}
+    if response.headers.get('link') is not None:
+        links_list = response.headers['link'].split(',')
+        tmp_link = links_list[0]
+        link_parts = tmp_link.split(';')
+        url_parts = link_parts[0].split("=")
+        new_base_url = url_parts[0].strip(" <?page")
+        nav_items_dict["base_url"] = new_base_url
+        for link in links_list:
+            link_parts = link.split(';')
+            new_base_url = url_parts[0].strip(" <?page")
+            rel_label = link_parts[1].strip(" rel=").strip('"')
+            if rel_label == "first":
+                page_number = int(url_parts[1].strip(">"))
+                nav_items_dict["first"] = page_number
+
+            if rel_label == "prev":
+                page_number = int(url_parts[1].strip(">"))
+                nav_items_dict["previous"] = page_number
+
+            if rel_label == "next":
+                page_number = int(url_parts[1].strip(">"))
+                nav_items_dict["next"] = page_number
+
+            if rel_label == "last":
+                page_number = int(url_parts[1].strip(">"))
+                nav_items_dict["last"] = page_number
+        return nav_items_dict
+
+
+
+###################### HTML TEMPLATE DEFINITION #####################
 
 html = """
 <html>
@@ -73,6 +122,7 @@ html = """
                 Github Issues
             </h1>
             <table border='1' id='issues_table'>
+                { nav_section }
                 <caption>
                     List of issues in Github Repo '{repo_string}'. Once you log
                     in, you'll be able to add a new issue or edit existing
@@ -118,15 +168,26 @@ html = """
 </html>
 """
 
-tbody_string = ""
 
-# Get the issues data from Github
-issues_url = "https://api.github.com/repos/{}/{}/issues".format(
-        GITHUB_USERNAME,
-        GITHUB_REPO
-        )
-r = requests.get(issues_url)
-page_links_list = get_page_links(r)
+############# TABLE NAV SECTION CREATION ################ 
+
+
+
+
+############### TABLE CONTENTS CREATION ############### 
+
+# Github only allows a few requests per hour if not logged in. Iterating
+# through all the pages at once will quickly exhaust this limit. So, if we
+# aren't logged in, we should just show one page at a time and allow the user
+# to page through the results.
+
+if logged_in:
+    # Get a list of pages to iterate through to display all issues on one page
+    page_links_list = get_page_links(issues_url)
+else:
+    # We only have one page to display
+    page_links_list=[issues_url]
+
 for page_link in page_links_list:
     r = requests.get(page_link)
     issues = r.json()
@@ -255,10 +316,16 @@ for page_link in page_links_list:
             status_string = status_string
             ))
 
+
+###################### SANITISE AND RENDER THE HTML #########################
+
+# Remove any dangerous tags etc
 tbody_string = clean_html(tbody_string)
 
+# Complete the HTML
 html = html.format(
         repo_string=GITHUB_REPO,
+        nav_string = nav_string,
         tbody_string=tbody_string
         )
 
