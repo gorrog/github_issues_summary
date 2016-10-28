@@ -11,10 +11,6 @@ class AnonymousTableTest(unittest.TestCase):
     tbody = table[0].tbody
     rows = tbody.find_all('tr')
 
-
-    def setUp(self):
-        pass
-
     def test_table_has_correct_number_of_cells_per_row(self):
         # There should be exactly 9 cells of data per row
         # when not logged in

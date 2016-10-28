@@ -86,7 +86,7 @@ class SueVisitorTest(unittest.TestCase):
                 )
         self.assertEqual(status_column.text, "Status")
 
-        # Sue scans down the table to find issue number 657 which she is
+        # Sue scans down the table to find recent issue number 657 which she is
         # interested in. 
         gh_numbers = self.browser.find_elements_by_class_name(
                 'gh_number'
@@ -97,8 +97,13 @@ class SueVisitorTest(unittest.TestCase):
                 number_present = True
         self.assertTrue(number_present)
 
-
-        #TODO. Create unit test to ensure that data is in the right columns
+        # Sue wonders what the first posted issue was. She scrolls down the
+        # table to the bottom to see issue #1
+        number_present = False
+        for gh_number in gh_numbers:
+            if gh_number.text == '1':
+                number_present = True
+        self.assertTrue(number_present)
 
         # Sue can't see any way to edit the information shown and wonders if
         # she needs to be authorised to make changes. Then she notices a small
