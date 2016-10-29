@@ -22,8 +22,9 @@ logged_in = False
 nav_string = ""
 tbody_string = ""
 form = cgi.FieldStorage()
-if 'data' in form:
-    issues_url = form['data']
+if 'github_data' in form:
+    issues_url = form['github_data'].value.strip('"')
+    print("form['github_data'] is {}".format(issues_url))
 else:
     issues_url = "https://api.github.com/repos/{}/{}/issues".format(
             GITHUB_USERNAME,
@@ -95,7 +96,7 @@ def get_nav_items(url):
 
             if rel_label == "prev":
                 prev_url = link_parts[0].strip(" <>")
-                nav_items_dict["pref"] = prev_url
+                nav_items_dict["prev"] = prev_url
 
             if rel_label == "next":
                 next_url = link_parts[0].strip(" <>")
@@ -180,7 +181,7 @@ if not logged_in:
         last_link = ""
 
         if nav_items_dict.get("first") is not None:
-            first_href = '{local_url_path}?data="{first_url}"'
+            first_href = '{local_url_path}?github_data="{first_url}"'
             first_href = first_href.format(
                     local_url_path = LOCAL_URL_PATH,
                     first_url = nav_items_dict["first"]
@@ -192,8 +193,8 @@ if not logged_in:
             """
             first_link = first_link.format(first_href = first_href)
 
-        if nav_items_dict.get("pref") is not None:
-            prev_href = '{local_url_path}?data="{prev_url}"'
+        if nav_items_dict.get("prev") is not None:
+            prev_href = '{local_url_path}?github_data="{prev_url}"'
             prev_href = prev_href.format(
                     local_url_path = LOCAL_URL_PATH,
                     prev_url = nav_items_dict["prev"]
@@ -206,7 +207,7 @@ if not logged_in:
             prev_link = prev_link.format(prev_href = prev_href)
 
         if nav_items_dict.get("next") is not None:
-            next_href = '{local_url_path}?data="{next_url}"'
+            next_href = '{local_url_path}?github_data="{next_url}"'
             next_href = next_href.format(
                     local_url_path = LOCAL_URL_PATH,
                     next_url = nav_items_dict["next"]
@@ -219,7 +220,7 @@ if not logged_in:
             next_link = next_link.format(next_href = next_href)
 
         if nav_items_dict.get("last") is not None:
-            last_href = '{local_url_path}?data="{last_url}"'
+            last_href = '{local_url_path}?github_data="{last_url}"'
             last_href = last_href.format(
                     local_url_path = LOCAL_URL_PATH,
                     last_url = nav_items_dict["last"]
