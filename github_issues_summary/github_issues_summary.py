@@ -3,6 +3,7 @@
 print 'Content-Type:text/html' #HTML is following
 print                          #Leave a blank line
 
+import cgi
 import cgitb
 cgitb.enable()
 
@@ -14,15 +15,20 @@ from lxml.html.clean import clean_html
 # Settings
 GITHUB_USERNAME = 'WorkAtSwordfish'
 GITHUB_REPO = 'GitIntegration'
+LOCAL_URL_PATH = '/cgi-bin/github_issues_summary.py'
 
 # Initialise variables
 logged_in = False
 nav_string = ""
 tbody_string = ""
-issues_url = "https://api.github.com/repos/{}/{}/issues".format(
-        GITHUB_USERNAME,
-        GITHUB_REPO
-        )
+form = cgi.FieldStorage()
+if 'data' in form:
+    issues_url = form['data']
+else:
+    issues_url = "https://api.github.com/repos/{}/{}/issues".format(
+            GITHUB_USERNAME,
+            GITHUB_REPO
+            )
 
 ########################## FUNCTIONS ############################
 
@@ -57,6 +63,7 @@ def get_page_links(root_issues_url):
             new_base_url = url_parts[0].strip(" <?page")
     # Now construct the page list
     page_links_list = []
+
     if last_page == 0:
         # We only have 1 page of issues
         page_links_list.append(root_issues_url)
@@ -72,37 +79,31 @@ def get_page_links(root_issues_url):
 def get_nav_items(url):
     """
     This function will return a dictionary of navigation items based on the
-    'first', 'previous', 'next' and 'last' page links optionally provided in
+    'first', 'pref', 'next' and 'last' page links optionally provided in
     the header of each response
     """
     response = requests.get(url)
     nav_items_dict = {}
     if response.headers.get('link') is not None:
         links_list = response.headers['link'].split(',')
-        tmp_link = links_list[0]
-        link_parts = tmp_link.split(';')
-        url_parts = link_parts[0].split("=")
-        new_base_url = url_parts[0].strip(" <?page")
-        nav_items_dict["base_url"] = new_base_url
         for link in links_list:
             link_parts = link.split(';')
-            new_base_url = url_parts[0].strip(" <?page")
             rel_label = link_parts[1].strip(" rel=").strip('"')
             if rel_label == "first":
-                page_number = int(url_parts[1].strip(">"))
-                nav_items_dict["first"] = page_number
+                first_url = link_parts[0].strip(" <>")
+                nav_items_dict["first"] = first_url
 
             if rel_label == "prev":
-                page_number = int(url_parts[1].strip(">"))
-                nav_items_dict["previous"] = page_number
+                prev_url = link_parts[0].strip(" <>")
+                nav_items_dict["pref"] = prev_url
 
             if rel_label == "next":
-                page_number = int(url_parts[1].strip(">"))
-                nav_items_dict["next"] = page_number
+                next_url = link_parts[0].strip(" <>")
+                nav_items_dict["next"] = next_url
 
             if rel_label == "last":
-                page_number = int(url_parts[1].strip(">"))
-                nav_items_dict["last"] = page_number
+                last_url = link_parts[0].strip(" <>")
+                nav_items_dict["last"] = last_url
         return nav_items_dict
 
 
@@ -122,7 +123,7 @@ html = """
                 Github Issues
             </h1>
             <table border='1' id='issues_table'>
-                { nav_section }
+                {nav_string}
                 <caption>
                     List of issues in Github Repo '{repo_string}'. Once you log
                     in, you'll be able to add a new issue or edit existing
@@ -170,9 +171,82 @@ html = """
 
 
 ############# TABLE NAV SECTION CREATION ################ 
+if not logged_in:
+    nav_items_dict = get_nav_items(issues_url)
+    if len(nav_items_dict) > 0:
+        first_link = ""
+        prev_link = ""
+        next_link = ""
+        last_link = ""
 
+        if nav_items_dict.get("first") is not None:
+            first_href = '{local_url_path}?data="{first_url}"'
+            first_href = first_href.format(
+                    local_url_path = LOCAL_URL_PATH,
+                    first_url = nav_items_dict["first"]
+                    )
+            first_link = """
+            <li>
+                <a href='{first_href}'>First Page</a>
+            </li>
+            """
+            first_link = first_link.format(first_href = first_href)
 
+        if nav_items_dict.get("pref") is not None:
+            prev_href = '{local_url_path}?data="{prev_url}"'
+            prev_href = prev_href.format(
+                    local_url_path = LOCAL_URL_PATH,
+                    prev_url = nav_items_dict["prev"]
+                    )
+            prev_link = """
+            <li>
+                <a href='{prev_href}'>Previous Page</a>
+            </li>
+            """
+            prev_link = prev_link.format(prev_href = prev_href)
 
+        if nav_items_dict.get("next") is not None:
+            next_href = '{local_url_path}?data="{next_url}"'
+            next_href = next_href.format(
+                    local_url_path = LOCAL_URL_PATH,
+                    next_url = nav_items_dict["next"]
+                    )
+            next_link = """
+            <li>
+                <a href='{next_href}'>Next Page</a>
+            </li>
+            """
+            next_link = next_link.format(next_href = next_href)
+
+        if nav_items_dict.get("last") is not None:
+            last_href = '{local_url_path}?data="{last_url}"'
+            last_href = last_href.format(
+                    local_url_path = LOCAL_URL_PATH,
+                    last_url = nav_items_dict["last"]
+                    )
+            last_link = """
+            <li>
+                <a href='{last_href}'>Last Page</a>
+            </li>
+            """
+            last_link = last_link.format(last_href = last_href)
+
+        nav_string = """
+        <nav>
+            <ul>
+                {first_link}
+                {prev_link}
+                {next_link}
+                {last_link}
+            </ul>
+        </nav>
+        """
+        nav_string = nav_string.format(
+                first_link = first_link,
+                prev_link = prev_link,
+                next_link = next_link,
+                last_link = last_link
+                )
 
 ############### TABLE CONTENTS CREATION ############### 
 
