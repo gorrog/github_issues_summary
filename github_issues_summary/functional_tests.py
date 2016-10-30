@@ -1,5 +1,6 @@
 import unittest
 from selenium import webdriver
+import time
 
 
 class SueVisitorTest(unittest.TestCase):
@@ -97,8 +98,19 @@ class SueVisitorTest(unittest.TestCase):
                 number_present = True
         self.assertTrue(number_present)
 
-        # Sue wonders what the first posted issue was. She scrolls down the
-        # table to the bottom to see issue #1
+        # Sue notices that there are only a limited number of items per page,
+        # but fortunately there are links to access subsequent pages.
+        # Sue wonders what the first posted issue was so she clicks on the link
+        # to the last page.
+        last_link = self.browser.find_element_by_link_text("Last Page")
+        last_link.click()
+        time.sleep(5)
+
+        # The last page is displayed, and she can now see the very first item,
+        # number 1.
+        gh_numbers = self.browser.find_elements_by_class_name(
+                'gh_number'
+                )
         number_present = False
         for gh_number in gh_numbers:
             if gh_number.text == '1':
