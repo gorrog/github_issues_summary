@@ -144,6 +144,7 @@ authenticate_form_string = ""
 new_issue_form_string = ""
 request_headers = {}
 token = ""
+token_error_string = ""
 
 # Allows access to any submitted data (whether GET url suffixes or POST data
 form = cgi.FieldStorage()
@@ -168,6 +169,18 @@ if 'token' in form and form['token'].value not in [None, ""]:
         # We will use this following variable when we make our call to GitHub
         # for the table data
         request_headers = {'Authorization': token_string }
+    else:
+        token_error_string = """
+            <section class="error">
+                <h2>
+                    Error
+                </h2>
+                <p class="error_message">
+                    The supplied token does not appear to be valid. Please try
+                    again
+                </p>
+            </section>
+        """
 
 ###################### HTML TEMPLATE DEFINITION #####################
 
@@ -183,6 +196,7 @@ html = """
             <h1>
                 {repo_string} Github Issues
             </h1>
+            {token_error_string}
             {authenticate_form_string}
             {new_issue_form_string}
             <table border='1' id='issues_table'>
@@ -440,20 +454,21 @@ for page_link in pages:
                 else:
                     r = requests.get(comments_url)
 
-                comments = r.json()
-                for comment in comments:
-                    # e.g. Johnny12 @ 2015-11-03T09:32:12 : "Comment"
-                    tmp_string = '''
-                    <p>
-                        {user} @ {timestamp} : "{comment}"
-                    </p>
-                    '''
-                    tmp_string = tmp_string.format(
-                            user = comment['user']['login'],
-                            timestamp = comment['updated_at'],
-                            comment = comment['body']
-                            )
-                    comments_string += tmp_string
+                if r.headers['Status'] == '200 OK':
+                    comments = r.json()
+                    for comment in comments:
+                        # e.g. Johnny12 @ 2015-11-03T09:32:12 : "Comment"
+                        tmp_string = '''
+                        <p>
+                            {user} @ {timestamp} : "{comment}"
+                        </p>
+                        '''
+                        tmp_string = tmp_string.format(
+                                user = comment['user']['login'],
+                                timestamp = comment['updated_at'],
+                                comment = comment['body']
+                                )
+                        comments_string += tmp_string
 
             ## Status Data ##
             # Get labels starting with '1:', '2:', '3:' or '4:'- these signify
@@ -522,7 +537,7 @@ else:
                 placeholder="eg: e529880b2b81d98cc28a802a3bdbf32ce98a0d47">
                 </input>
             </label>
-            <input type="submit" value="Log In">
+            <input type="submit" value="Log In" id="log_in_button">
             <p>
                 <em>Please be patient after logging in.</em> Displaying all issues on a
                 single page can take up to a full minute or longer.
@@ -600,6 +615,7 @@ if len(tbody_string) > 0:
 
 # Complete the HTML
 html = html.format(
+        token_error_string = token_error_string,
         authenticate_form_string = authenticate_form_string,
         new_issue_form_string = new_issue_form_string,
         repo_string=GITHUB_REPO,

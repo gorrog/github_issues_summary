@@ -121,7 +121,6 @@ class SueVisitorTest(unittest.TestCase):
         # she needs to be authorised to make changes. Then she notices a small
         # form at the top of the page with the legend "Log In to Add a new
         # issue or view all issues on a single page".
-        log_in_form = self.browser.find_element_by_id("authenticate_form")
         log_in_legend = self.browser.find_element_by_css_selector(
                 "form#authenticate_form legend"
                 )
@@ -135,11 +134,17 @@ class SueVisitorTest(unittest.TestCase):
         token_input.send_keys("bobobobo")
 
         # She then clicks the 'login' button.
-        self.fail("Finish the test")
+        login_button = self.browser.find_element_by_id("log_in_button")
+        login_button.click()
+        time.sleep(5)
 
-        # The page refreshes and at the top, a message tells her that either
-        # her username or password is incorrect.
-        self.fail("Finish the test")
+        # The page refreshes and at the top, a message tells her that the token
+        # that she entered is not valid
+        token_error_message = self.browser.find_element_by_css_selector(
+                "section.error p.error_message"
+                )
+        self.assertIn("token does not appear to be valid",
+                token_error_message.text)
 
         # Sue realises that she had Caps lock on when entering her password.
         # She corrects this error and hits enter.
