@@ -27,7 +27,7 @@ class SueVisitorTest(unittest.TestCase):
         main_heading = self.browser.find_element_by_css_selector(
                 "section#main_content h1"
                 )
-        self.assertEqual(main_heading.text, "Github Issues")
+        self.assertIn("Github Issues", main_heading.text)
         self.browser.find_element_by_id(
                 "issues_table"
                 )
@@ -104,7 +104,7 @@ class SueVisitorTest(unittest.TestCase):
         # to the last page.
         last_link = self.browser.find_element_by_link_text("Last Page")
         last_link.click()
-        time.sleep(5)
+        time.sleep(10)
 
         # The last page is displayed, and she can now see the very first item,
         # number 1.
@@ -119,21 +119,20 @@ class SueVisitorTest(unittest.TestCase):
 
         # Sue can't see any way to edit the information shown and wonders if
         # she needs to be authorised to make changes. Then she notices a small
-        # form at the top of the page with the legend "Log In to Add/Modify
-        # Issues".
-        self.fail("Finish the test")
+        # form at the top of the page with the legend "Log In to Add a new
+        # issue or view all issues on a single page".
+        log_in_form = self.browser.find_element_by_id("authenticate_form")
+        log_in_legend = self.browser.find_element_by_css_selector(
+                "form#authenticate_form legend"
+                )
+        self.assertIn("Log in",log_in_legend.text)
 
-        # Sue clicks in the username field and enters the username.  TODO:
-        # check these field names
-        self.fail("Finish the test")
-
-        # Sue clicks the 'login' button, but nothing happens because her
-        # browser tells her to fill in the password field as well
-        self.fail("Finish the test")
-
-        # Sue clicks in the password field and enters the password,
-        # incorrectly.
-        self.fail("Finish the test")
+        # Sue clicks in the token field and enters a token incorrectly.
+        token_input = self.browser.find_element_by_css_selector(
+            "form#authenticate_form input"
+            )
+        token_input.click()
+        token_input.send_keys("bobobobo")
 
         # She then clicks the 'login' button.
         self.fail("Finish the test")
