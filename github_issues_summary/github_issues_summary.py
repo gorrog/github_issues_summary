@@ -69,7 +69,6 @@ def get_page_links(root_issues_url):
     else:
         response = requests.get(issues_url)
 
-    print("I'm in get_page_links. response headers are {}".format(response.headers))
     if response.headers['Status'] == '200 OK':
         # First, we need to find the link with associated 'rel="last"' This will
         # give us the last page number
@@ -566,9 +565,11 @@ if logged_in:
     new_issue_form_string = """
     <form id="new_issue_form" method="POST">
         <fieldset>
+
             <legend>
                Create a New Issue
             </legend>
+
             <label for="client_input">
                 Client:
             </label>
@@ -579,7 +580,7 @@ if logged_in:
             <label for="action_input">
                 Action:
             </label>
-            <input name="action" id ="action_input">
+            <input name="action_input" id ="action_input">
             </input>
 
             <label for="description_input">
@@ -614,6 +615,10 @@ if logged_in:
             <select id="status_input" name="status">
                 {status_options}
             </select>
+
+            <input type='submit' id="new_issue_submit_button"
+            value='Create New Issue'>
+            </input>
         </fieldset>
     </form>
     """

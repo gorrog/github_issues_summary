@@ -1,7 +1,10 @@
 import unittest
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 import time
+
+from settings import SECRET_TOKEN
 
 
 class SueVisitorTest(unittest.TestCase):
@@ -162,7 +165,7 @@ class SueVisitorTest(unittest.TestCase):
             "form#authenticate_form input"
             )
         token_input.click()
-        token_input.send_keys("a229810bfb81a78cc28a802a7bdbe32cd9860d26")
+        token_input.send_keys(SECRET_TOKEN)
         token_input.send_keys(Keys.ENTER)
         time.sleep(60)
 
@@ -182,7 +185,7 @@ class SueVisitorTest(unittest.TestCase):
             "form#authenticate_form input"
             )
         token_input.click()
-        token_input.send_keys("a229810bfb81a78cc28a802a7bdbe32cd9860d26")
+        token_input.send_keys(SECRET_TOKEN)
         token_input.send_keys(Keys.ENTER)
         time.sleep(60)
 
@@ -211,7 +214,7 @@ class SueVisitorTest(unittest.TestCase):
             "form#authenticate_form input"
             )
         token_input.click()
-        token_input.send_keys("a229810bfb81a78cc28a802a7bdbe32cd9860d26")
+        token_input.send_keys(SECRET_TOKEN)
         token_input.send_keys(Keys.ENTER)
         time.sleep(60)
 
@@ -223,14 +226,57 @@ class SueVisitorTest(unittest.TestCase):
         self.assertEqual("Create a New Issue",new_issue_legend.text)
 
         # Sue realises that she can create a new issue by filling out the
-        # fields and hitting the 'Create New Issue' button. She fills out the
-        # 'Action item/Request' field.
-        self.fail("Finish the test")
+        # fields and hitting the 'Create New Issue' button. She starts by
+        # selecting 'Client ZZ' from the Client drop down list.
+        client_select = Select(self.browser.find_element_by_id("client_input"))
+        client_select.select_by_visible_text("Client ZZ")
 
-        # Sue clicks the 'Create Issue' button, but her browser warns her that
-        # there are mandatory fields that she needs to fill out.  TODO: write
-        # tests for mandatory fields.
-        self.fail("Finish the test")
+        # She enters "Heading is wrong colour" in the Action Item/Request
+        # field
+        action_field = self.browser.find_element_by_id("action_input")
+        action_field.send_keys("Heading is wrong colour")
+
+        # She enters "Client requested that the header be in blue, but it is
+        # currently red. Please change it to a dark blue" in the Description
+        # field
+        description_field = self.browser.find_element_by_id(
+                "description_input"
+                )
+        description_field.send_keys("""
+                Client requested that the header be in blue, but it is
+                currently red. Please change it to a dark blue
+                """)
+
+
+        # This is an urgent issue, so Sue selects "High" from the priority
+        # picker
+        priority_select = Select(
+                self.browser.find_element_by_id("priority_input")
+                )
+        priority_select.select_by_visible_text("High")
+
+        # This is a bug report, so Sue "bug" from the category picker
+        category_select = Select(self.browser.find_element_by_id(
+            "category_input"
+            ))
+        category_select.select_by_visible_text("bug")
+
+        # Since 'gorrog' is the person responsible for front end work, she puts
+        # his github username in the 'Assigned To' field
+        assigned_field = self.browser.find_element_by_id(
+                "assigned_input"
+                )
+        assigned_field.send_keys("gorrog")
+
+        # Finally, Sue selects 'Backlog' from the status picker
+        status_select = Select(self.browser.find_element_by_id("status_input"))
+        status_select.select_by_visible_text("Backlog")
+
+        # Sue clicks the 'Create Issue' button.
+        create_issue_button = self.browser.find_element_by_id(
+                "new_issue_submit_button"
+                )
+        create_issue_button.click()
 
         # Sue fills out the last mandatory field
         self.fail("Finish the test")
