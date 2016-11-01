@@ -1,12 +1,13 @@
 import unittest
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 import time
 
 
 class SueVisitorTest(unittest.TestCase):
     def setUp(self):
         self.browser = webdriver.Firefox()
-        self.browser.implicitly_wait(3)
+        self.browser.implicitly_wait(10)
 
     def tearDown(self):
         self.browser.quit()
@@ -87,6 +88,10 @@ class SueVisitorTest(unittest.TestCase):
                 )
         self.assertEqual(status_column.text, "Status")
 
+    def test_data_is_present(self):
+        # Set Up
+        self.browser.get("http://localhost/cgi-bin/github_issues_summary.py")
+
         # Sue scans down the table to find recent issue number 657 which she is
         # interested in. 
         gh_numbers = self.browser.find_elements_by_class_name(
@@ -104,7 +109,6 @@ class SueVisitorTest(unittest.TestCase):
         # to the last page.
         last_link = self.browser.find_element_by_link_text("Last Page")
         last_link.click()
-        time.sleep(10)
 
         # The last page is displayed, and she can now see the very first item,
         # number 1.
@@ -116,6 +120,12 @@ class SueVisitorTest(unittest.TestCase):
             if gh_number.text == '1':
                 number_present = True
         self.assertTrue(number_present)
+
+    def test_login(self):
+        # Set Up
+        self.browser.get("http://localhost/cgi-bin/github_issues_summary.py")
+        last_link = self.browser.find_element_by_link_text("Last Page")
+        last_link.click()
 
         # Sue can't see any way to edit the information shown and wonders if
         # she needs to be authorised to make changes. Then she notices a small
@@ -132,11 +142,11 @@ class SueVisitorTest(unittest.TestCase):
             )
         token_input.click()
         token_input.send_keys("bobobobo")
+        time.sleep(30)
 
         # She then clicks the 'login' button.
         login_button = self.browser.find_element_by_id("log_in_button")
         login_button.click()
-        time.sleep(5)
 
         # The page refreshes and at the top, a message tells her that the token
         # that she entered is not valid
@@ -146,41 +156,75 @@ class SueVisitorTest(unittest.TestCase):
         self.assertIn("token does not appear to be valid",
                 token_error_message.text)
 
-        # Sue realises that she had Caps lock on when entering her password.
-        # She corrects this error and hits enter.
-        self.fail("Finish the test")
+        # Sue realises that she entered an old expired token. She corrects this
+        # error and hits enter.
+        token_input = self.browser.find_element_by_css_selector(
+            "form#authenticate_form input"
+            )
+        token_input.click()
+        token_input.send_keys("a229810bfb81a78cc28a802a7bdbe32cd9860d26")
+        token_input.send_keys(Keys.ENTER)
+        time.sleep(60)
+
 
         # The page refreshes. Sue wonders if she logged on successfully, but
-        # then she sees a button labelled 'Log Off', so she knows she did.
-        self.fail("Finish the test")
+        # then she sees that where the login form was, there is now a message
+        # saying "You are currently logged in"
+        logged_in_legend = self.browser.find_element_by_css_selector(
+                "form#authenticate_form legend"
+                )
+        self.assertEqual("You are currently logged in",logged_in_legend.text)
 
-        # After logging in, Sue notices that there is now also a column called
-        # 'Action' containing buttons. Sue is curious about what this column is
-        # for.
-        self.fail("Finish the test")
+    def test_login_page_shows_all_data(self):
+        # Set up
+        self.browser.get("http://localhost/cgi-bin/github_issues_summary.py")
+        token_input = self.browser.find_element_by_css_selector(
+            "form#authenticate_form input"
+            )
+        token_input.click()
+        token_input.send_keys("a229810bfb81a78cc28a802a7bdbe32cd9860d26")
+        token_input.send_keys(Keys.ENTER)
+        time.sleep(60)
 
-        # Sue notices that all the fields in the issues table are now editable!
-        # She is happy about this, because one of the existing issues has a
-        # spelling mistake that she wants to correct. She corrects the spelling
-        # mistake and then realises that the 'action' column allows actions to
-        # be performed on each row.
-        self.fail("Finish the test")
+        # Sue can now see all the issues on one page. She is happy about this
+        # and scrolls down to see if issue 1 is present.
+        gh_numbers = self.browser.find_elements_by_class_name(
+                'gh_number'
+                )
+        number_present = False
+        for gh_number in gh_numbers:
+            if gh_number.text == '1':
+                number_present = True
+        self.assertTrue(number_present)
 
-        # She clicks the 'update' button to the right of her updated row.
-        self.fail("Finish the test")
+        # She then scrolls back up to make sure that a recent issue, number 709
+        # is also present.
+        for gh_number in gh_numbers:
+            if gh_number.text == '709':
+                number_present = True
+        self.assertTrue(number_present)
 
-        # The page updates and Sue can see that the change she made has been
-        # preserved. Satisfied that updates are working, Sue now wonders if the
-        # system allows for new entries.
-        self.fail("Finish the test")
+    def test_adding_new_issue(self):
+        # Set up
+        self.browser.get("http://localhost/cgi-bin/github_issues_summary.py")
+        token_input = self.browser.find_element_by_css_selector(
+            "form#authenticate_form input"
+            )
+        token_input.click()
+        token_input.send_keys("a229810bfb81a78cc28a802a7bdbe32cd9860d26")
+        token_input.send_keys(Keys.ENTER)
+        time.sleep(60)
 
-        # Sue notices that the top row of the table is empty and that the
-        # action button on the right is labelled 'create issue'.
-        self.fail("Finish the test")
+        # After logging in, Sue notices that there is now a form titled "Create
+        # New Issue"
+        new_issue_legend = self.browser.find_element_by_css_selector(
+                "form#new_issue_form fieldset legend"
+                )
+        self.assertEqual("Create a New Issue",new_issue_legend.text)
 
         # Sue realises that she can create a new issue by filling out the
-        # fields and hitting the 'update button'. She fills out the 'Action
-        # item/Request' field.
+        # fields and hitting the 'Create New Issue' button. She fills out the
+        # 'Action item/Request' field.
         self.fail("Finish the test")
 
         # Sue clicks the 'Create Issue' button, but her browser warns her that

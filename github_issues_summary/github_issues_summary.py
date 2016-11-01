@@ -34,8 +34,8 @@ def valid_token(token):
     tmp_headers = {'Authorization': token_string }
 
     response = requests.get(issues_url, headers=tmp_headers)
-    print("The request headers were {}".format(tmp_headers))
-    print("we're checking the token. The response is {}".format(response))
+#    print("The request headers were {}".format(tmp_headers))
+#    print("we're checking the token. The response is {}".format(response))
 
     if response.headers['Status'] == '200 OK':
         return True
@@ -89,13 +89,16 @@ def get_page_links(root_issues_url):
         if last_page == 0:
             # We only have 1 page of issues
             page_links_list.append(root_issues_url)
-        if last_page >0:
+        elif last_page >0:
             for page in range(1, last_page+1):
                 url = new_base_url + "?page=" + str(page)
                 page_links_list.append(url)
         else:
             # Something has gone wrong.
-            raise Exception("we couldn't construct a page list")
+            raise Exception("""we couldn't construct a page list. 'last page'
+                    should be 0 or > 0, but it is {},
+                    and its type is {}""".format(last_page, type(last_page)))
+
     return(page_links_list)
 
 def get_nav_items(url):
@@ -169,6 +172,15 @@ if 'token' in form and form['token'].value not in [None, ""]:
         # We will use this following variable when we make our call to GitHub
         # for the table data
         request_headers = {'Authorization': token_string }
+        # Reset the base URL to ensure that we will have a 'rel = last' value
+        # in the response headers in order to construct our page list from.
+        # This fixes a bug that occurs when the user is on the last page and
+        # logs in.
+        issues_url = "https://api.github.com/repos/{}/{}/issues".format(
+                GITHUB_USERNAME,
+                GITHUB_REPO
+                )
+
     else:
         token_error_string = """
             <section class="error">
@@ -346,6 +358,7 @@ if logged_in:
     clients_set = set()
     priorities_set = set()
     categories_set = set()
+    status_set = set()
 else:
     # We only have one page to display
     pages = []
@@ -481,6 +494,8 @@ for page_link in pages:
             status_string = ""
             for status_item in status_list:
                 status_string += (str(status_item) + ", ")
+                if logged_in:
+                    status_set.add(status_item)
             status_string = status_string.strip(', ')
 
             # Add the row to the table data string
@@ -550,62 +565,110 @@ else:
 if logged_in:
     new_issue_form_string = """
     <form id="new_issue_form" method="POST">
-        <label for="client_input">
-            Client:
-        </label>
-        <select id="client_input" name="client">
-            {client_options}
-        </select>
+        <fieldset>
+            <legend>
+               Create a New Issue
+            </legend>
+            <label for="client_input">
+                Client:
+            </label>
+            <select id="client_input" name="client">
+                {client_options}
+            </select>
 
-        <label for="action_input">
-            Action:
-        </label>
-        <input name="action" id ="action_input">
-        </input>
+            <label for="action_input">
+                Action:
+            </label>
+            <input name="action" id ="action_input">
+            </input>
 
-        <label for="description_input">
-            Description:
-        </label>
-        <textarea id="description_input" name="description">
-        </textarea>
+            <label for="description_input">
+                Description:
+            </label>
+            <textarea id="description_input" name="description">
+            </textarea>
 
-        <label for="priority_input">
-            Priority:
-        </label>
-        <select id="priority_input" name="priority">
-            {priority_options}
-        </select>
+            <label for="priority_input">
+                Priority:
+            </label>
+            <select id="priority_input" name="priority">
+                {priority_options}
+            </select>
 
-        <label for="category_input">
-            Category:
-        </label>
-        <select id="category_input" name="category">
-            {category_options}
-        </select>
+            <label for="category_input">
+                Category:
+            </label>
+            <select id="category_input" name="category">
+                {category_options}
+            </select>
 
-        <label for="client_input">
-            Client:
-        </label>
-        <select id="client_input" name="client">
-            {client_options}
-        </select>
+            <label for="assigned_input">
+                Assigned To:
+            </label>
+            <input name="assigned" id ="assigned_input">
+            </input>
 
-        <label for="client_input">
-            Client:
-        </label>
-        <select id="client_input" name="client">
-            {client_options}
-        </select>
-
-        <label for="client_input">
-            Client:
-        </label>
-        <select id="client_input" name="client">
-            {client_options}
-        </select>
-
+            <label for="status_input">
+                Status:
+            </label>
+            <select id="status_input" name="status">
+                {status_options}
+            </select>
+        </fieldset>
     </form>
     """
+
+    # Construct list of client options
+    client_options = """
+    <option value=''>Select a Client</option>
+    """
+    for client in clients_set:
+        tmp_string = """
+        <option value='{client}'>{client}</option>
+        """
+        tmp_string = tmp_string.format(client=client)
+        client_options += tmp_string
+
+    # Construct list of priority options
+    priority_options = """
+    <option value=''>Select a Priority</option>
+    """
+    for priority in priorities_set:
+        tmp_string = """
+        <option value='{priority}'>{priority}</option>
+        """
+        tmp_string = tmp_string.format(priority=priority)
+        priority_options += tmp_string
+
+
+    # Construct list of category options
+    category_options = """
+    <option value=''>Select a Category</option>
+    """
+    for category in categories_set:
+        tmp_string = """
+        <option value='{category}'>{category}</option>
+        """
+        tmp_string = tmp_string.format(category=category)
+        category_options += tmp_string
+
+    # Construct list of status options
+    status_options = """
+    <option value=''>Select a Status</option>
+    """
+    for status in status_set:
+        tmp_string = """
+        <option value='{status}'>{status}</option>
+        """
+        tmp_string = tmp_string.format(status=status)
+        status_options += tmp_string
+
+    new_issue_form_string = new_issue_form_string.format(
+            client_options = client_options,
+            priority_options = priority_options,
+            category_options = category_options,
+            status_options = status_options
+            )
 
 ###################### SANITISE AND RENDER THE HTML #########################
 
