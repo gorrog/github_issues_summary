@@ -172,11 +172,11 @@ class SueVisitorTest(unittest.TestCase):
 
         # The page refreshes. Sue wonders if she logged on successfully, but
         # then she sees that where the login form was, there is now a message
-        # saying "You are currently logged in"
+        # saying "You are logged in"
         logged_in_legend = self.browser.find_element_by_css_selector(
                 "form#authenticate_form legend"
                 )
-        self.assertEqual("You are currently logged in",logged_in_legend.text)
+        self.assertEqual("You are logged in",logged_in_legend.text)
 
     def test_login_page_shows_all_data(self):
         # Set up
