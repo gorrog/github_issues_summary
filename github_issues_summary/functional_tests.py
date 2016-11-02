@@ -102,7 +102,7 @@ class SueVisitorTest(unittest.TestCase):
                 )
         number_present = False
         for gh_number in gh_numbers:
-            if gh_number.text == '657':
+            if gh_number.text == '720':
                 number_present = True
         self.assertTrue(number_present)
 
@@ -145,11 +145,11 @@ class SueVisitorTest(unittest.TestCase):
             )
         token_input.click()
         token_input.send_keys("bobobobo")
-        time.sleep(30)
 
         # She then clicks the 'login' button.
         login_button = self.browser.find_element_by_id("log_in_button")
         login_button.click()
+        time.sleep(30)
 
         # The page refreshes and at the top, a message tells her that the token
         # that she entered is not valid
@@ -277,54 +277,72 @@ class SueVisitorTest(unittest.TestCase):
                 "new_issue_submit_button"
                 )
         create_issue_button.click()
+        time.sleep(60)
 
-        # Sue fills out the last mandatory field
-        self.fail("Finish the test")
+        # The page updates. Sue isn't immediately sure if her submission has
+        # worked, but then she sees a message saying 'Your issue was added
+        # successfully'
+        new_issue_success_message = self.browser.find_element_by_id(
+                "new_issue_success_message"
+                )
+        self.assertEqual(
+                "Your issue has been successfully added.",
+                new_issue_success_message.text
+                )
 
-        # Sue clicks the 'Create Issue' button.
-        self.fail("Finish the test")
+        # On closer inspection, Sue realises that her issue has been added to
+        # the list
+        actions = self.browser.find_elements_by_class_name(
+                'action'
+                )
+        search_string_present = False
+        for action in actions:
+            if action.text == "Heading is wrong colour":
+                search_string_present = True
+        self.assertTrue(search_string_present)
 
-        # The page updates, and now Sue's issue appears in the list.
-        self.fail("Finish the test")
-
-        # Sue realises that she made a mistake with her submission. She changes
-        # one of the fields
-        self.fail("Finish the test")
-
-        # Sue clicks the 'Update' button.
-        self.fail("Finish the test")
-
-        # The page refreshes and Sue can see that the change has persisted.
-        self.fail("Finish the test")
-
+    def test_log_off(self):
         # Satisfied that her work for the day is done, Sue closes her browser.
-        self.fail("Finish the test")
 
         # Five minutes later, Sue realises that she forgot to click the Log Off
         # button. She becomes anxious that the system might still be logged on.
-        self.fail("Finish the test")
 
         # She opens up the URL again, and notices that the system seems to have
         # logged her off, because the "Log In to Add/Modify Issues" form is
         # displayed.
-        self.fail("Finish the test")
+        self.browser.get("http://localhost/cgi-bin/github_issues_summary.py")
+        log_in_legend = self.browser.find_element_by_css_selector(
+                "form#authenticate_form legend"
+                )
+        self.assertIn("Log in",log_in_legend.text)
 
         # Being a cautious person though, Sue decides that she had better log
         # on again and click the Log Off button to be 100% sure. She enters her
         # username and presses tab to get to the next field.
-        self.fail("Finish the test")
 
-        # She enters the password and presses the 'Log In' button.
-        self.fail("Finish the test")
+        # She enters her token and clicks the 'Log In' button.
+        token_input = self.browser.find_element_by_css_selector(
+            "form#authenticate_form input"
+            )
+        token_input.click()
+        token_input.send_keys(SECRET_TOKEN)
+        token_input.send_keys(Keys.ENTER)
+        time.sleep(60)
 
         # As before, the page refreshes. The 'Log Out' button is visible. Sue
         # clicks the button.
-        self.fail("Finish the test")
+        log_out_button = self.browser.find_element_by_id(
+            "logout_button"
+            )
+        log_out_button.click()
 
         # The page refreshes and the "Log In to Add/Modify Issues" form is
         # again visible. Sue is satisfied that she has logged off properly, so
         # she closes her web browser.
-        self.fail("Finish the test")
+        log_in_legend = self.browser.find_element_by_css_selector(
+                "form#authenticate_form legend"
+                )
+        self.assertIn("Log in",log_in_legend.text)
 
 if __name__ == "__main__":
     unittest.main()

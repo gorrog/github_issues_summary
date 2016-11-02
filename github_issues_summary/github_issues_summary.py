@@ -12,6 +12,8 @@ cgitb.enable()
 # much easier html requests
 import requests
 
+import json
+
 # Used to remove any dangerous HTML (<script> tags etc)
 from lxml.html.clean import clean_html
 
@@ -147,12 +149,15 @@ new_issue_form_string = ""
 request_headers = {}
 token = ""
 token_error_string = ""
+created_success_string = ""
+created_error_string = ""
 
 # Allows access to any submitted data (whether GET url suffixes or POST data
 form = cgi.FieldStorage()
 
 
 ####################### PROCESS SUBMITTED DATA ######################
+
 # Use a specific page of issues data if specified, otherwise just use the root
 # issues URL
 if 'github_data' in form:
@@ -163,14 +168,17 @@ else:
             GITHUB_REPO
             )
 
-if 'token' in form and form['token'].value not in [None, ""]:
+# Logging on
+if form.getfirst('token',"") != "":
     token = form['token'].value
     if valid_token(token):
         logged_in = True
         token_string = "token {}".format(token)
+
         # We will use this following variable when we make our call to GitHub
         # for the table data
         request_headers = {'Authorization': token_string }
+
         # Reset the base URL to ensure that we will have a 'rel = last' value
         # in the response headers in order to construct our page list from.
         # This fixes a bug that occurs when the user is on the last page and
@@ -193,6 +201,80 @@ if 'token' in form and form['token'].value not in [None, ""]:
             </section>
         """
 
+
+# Process submitted new issue data
+
+if form.getfirst('action_input',"") != "":
+
+    # Construct the request dictionary
+    new_issue_data = {"title": form['action_input'].value}
+
+    # We will use this for priority, category and status fields if present
+    submitted_labels_list = []
+
+    if form.getfirst('client_input',"") != "":
+        submitted_labels_list.append("C: " + form.getfirst('client_input'))
+
+    if form.getfirst('description_input',"") != "":
+        new_issue_data["body"] = form.getfirst('description_input')
+
+    if form.getfirst('priority_input',"") != "":
+        submitted_labels_list.append("P: " + form.getfirst('priority_input'))
+
+    if form.getfirst('category_input',"") != "":
+        submitted_labels_list.append("Cat: " + form.getfirst('category_input'))
+
+    if form.getfirst('assigned_input',"") != "":
+        new_issue_data["assignees"] = [form.getfirst('assigned_input')]
+
+    if form.getfirst('status_input',"") != "":
+        tmp_status = form.getfirst('status_input',"")
+        if tmp_status == "Backlog":
+            submitted_labels_list.append("1: " + tmp_status)
+        elif tmp_status == "In Development":
+            submitted_labels_list.append("2: " + tmp_status)
+        elif tmp_status == "In Testing":
+            submitted_labels_list.append("3: " + tmp_status)
+        elif tmp_status == "Deployed":
+            submitted_labels_list.append("4: " + tmp_status)
+
+    if len(submitted_labels_list) > 0:
+        new_issue_data["labels"] = submitted_labels_list
+
+    # Now, construct and make the request
+    print("We're about to submit this data: {}".format(json.dumps(new_issue_data)))
+    payload = {'Authorization': token_string}
+    response = requests.post(
+            issues_url, headers=payload, data=json.dumps(new_issue_data)
+            )
+    if response.headers['status'] == '201 Created':
+        # Success - new issue was added to Github
+        created_success_string = """
+        <section>
+            <h2>
+                Success!
+            </h2>
+            <p id="new_issue_success_message">
+                Your issue has been successfully added.
+            </p>
+        </section>
+
+        """
+
+    else:
+        # Something went wrong - new issue wasn't created.
+        created_error_string = """
+        <section>
+            <h2>
+                Error
+            </h2>
+            <p id="new_issue_error_message">
+                Something went wrong. We cannot create your new issue - sorry.
+            </p>
+        </section>
+        """
+
+
 ###################### HTML TEMPLATE DEFINITION #####################
 
 html = """
@@ -209,6 +291,8 @@ html = """
             </h1>
             {token_error_string}
             {authenticate_form_string}
+            {created_success_string}
+            {created_error_string}
             {new_issue_form_string}
             <table border='1' id='issues_table'>
                 {nav_string}
@@ -534,7 +618,7 @@ if logged_in:
             </legend>
                 <input type="hidden" name="token" value="">
                 </input>
-                <input type="submit" value="Log Out">
+                <input type="submit" id="logout_button" value="Log Out">
         </fieldset>
     </form>
     """
@@ -573,48 +657,51 @@ if logged_in:
             <label for="client_input">
                 Client:
             </label>
-            <select id="client_input" name="client">
+            <select id="client_input" name="client_input">
                 {client_options}
             </select>
 
             <label for="action_input">
                 Action:
             </label>
-            <input name="action_input" id ="action_input">
+            <input name="action_input" id ="action_input" required>
             </input>
 
             <label for="description_input">
                 Description:
             </label>
-            <textarea id="description_input" name="description">
+            <textarea id="description_input" name="description_input">
             </textarea>
 
             <label for="priority_input">
                 Priority:
             </label>
-            <select id="priority_input" name="priority">
+            <select id="priority_input" name="priority_input">
                 {priority_options}
             </select>
 
             <label for="category_input">
                 Category:
             </label>
-            <select id="category_input" name="category">
+            <select id="category_input" name="category_input">
                 {category_options}
             </select>
 
             <label for="assigned_input">
                 Assigned To:
             </label>
-            <input name="assigned" id ="assigned_input">
+            <input name="assigned_input" id ="assigned_input">
             </input>
 
             <label for="status_input">
                 Status:
             </label>
-            <select id="status_input" name="status">
+            <select id="status_input" name="status_input">
                 {status_options}
             </select>
+
+            <input type='hidden' name='token' value='{token}'>
+            </input>
 
             <input type='submit' id="new_issue_submit_button"
             value='Create New Issue'>
@@ -672,7 +759,8 @@ if logged_in:
             client_options = client_options,
             priority_options = priority_options,
             category_options = category_options,
-            status_options = status_options
+            status_options = status_options,
+            token = token
             )
 
 ###################### SANITISE AND RENDER THE HTML #########################
@@ -685,6 +773,8 @@ if len(tbody_string) > 0:
 html = html.format(
         token_error_string = token_error_string,
         authenticate_form_string = authenticate_form_string,
+        created_success_string = created_success_string,
+        created_error_string = created_error_string,
         new_issue_form_string = new_issue_form_string,
         repo_string=GITHUB_REPO,
         nav_string = nav_string,
