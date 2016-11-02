@@ -36,8 +36,6 @@ def valid_token(token):
     tmp_headers = {'Authorization': token_string }
 
     response = requests.get(issues_url, headers=tmp_headers)
-#    print("The request headers were {}".format(tmp_headers))
-#    print("we're checking the token. The response is {}".format(response))
 
     if response.headers['Status'] == '200 OK':
         return True
@@ -190,11 +188,13 @@ if form.getfirst('token',"") != "":
 
     else:
         token_error_string = """
-            <section class="error">
-                <h2>
-                    Error
-                </h2>
-                <p class="error_message">
+            <section class="error panel panel-danger">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        Error
+                    </h3>
+                </div>
+                <p class="error_message panel-body">
                     The supplied token does not appear to be valid. Please try
                     again
                 </p>
@@ -242,7 +242,6 @@ if form.getfirst('action_input',"") != "":
         new_issue_data["labels"] = submitted_labels_list
 
     # Now, construct and make the request
-    print("We're about to submit this data: {}".format(json.dumps(new_issue_data)))
     payload = {'Authorization': token_string}
     response = requests.post(
             issues_url, headers=payload, data=json.dumps(new_issue_data)
@@ -250,25 +249,28 @@ if form.getfirst('action_input',"") != "":
     if response.headers['status'] == '201 Created':
         # Success - new issue was added to Github
         created_success_string = """
-        <section>
-            <h2>
-                Success!
-            </h2>
-            <p id="new_issue_success_message">
-                Your issue has been successfully added.
-            </p>
-        </section>
+        <div class="panel panel-success">
+            <section class="panel-heading">
+                <h3 class="panel-title">
+                    Success!
+                </h3>
+                <p id="new_issue_success_message" class="panel-body">
+                    Your issue has been successfully added.
+                </p>
+            </section>
+        </div>
 
         """
 
     else:
         # Something went wrong - new issue wasn't created.
         created_error_string = """
-        <section>
-            <h2>
+        <div class="panel panel-warning">
+        <section class="panel-heading">
+            <h3 class="panel-title">
                 Error
-            </h2>
-            <p id="new_issue_error_message">
+            </h3>
+            <p id="new_issue_error_message" class="panel-body">
                 Something went wrong. We cannot create your new issue - sorry.
             </p>
         </section>
@@ -278,63 +280,80 @@ if form.getfirst('action_input',"") != "":
 ###################### HTML TEMPLATE DEFINITION #####################
 
 html = """
-<html>
+<!DOCTYPE html>
+<html lang="en_gb">
     <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+        <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+        crossorigin="anonymous">
+
         <title>
            Github Issues Summary for {repo_string}
         </title>
     </head>
     <body>
-        <section id='main_content'>
-            <h1>
-                {repo_string} Github Issues
-            </h1>
-            {token_error_string}
-            {authenticate_form_string}
-            {created_success_string}
-            {created_error_string}
-            {new_issue_form_string}
-            <table border='1' id='issues_table'>
-                {nav_string}
-                <caption>
-                    List of issues in Github Repo '{repo_string}'.
-                </caption
-                <thead>
-                    <tr>
-                        <th id='client_column'>
-                           Client Name
-                        </th>
-                        <th id='action_column'>
-                           Action item/Request
-                        </th>
-                        <th id='description_column'>
-                           Description
-                        </th>
-                        <th id='gh_column'>
-                           GH number
-                        </th>
-                        <th id='priority_column'>
-                           Priority
-                        </th>
-                        <th id='category_column'>
-                           Category
-                        </th>
-                        <th id='assigned_column'>
-                           Assigned To
-                        </th>
-                        <th id='comments_column'>
-                           Comments
-                        </th>
-                        <th id='status_column'>
-                           Status
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {tbody_string}
-                </tbody>
-            </table>
-        </section>
+        <div class="container theme-showcase">
+            <section id='main_content'>
+                <div class="jumbotron">
+                    <h1>
+                        {repo_string} Github Issues
+                    </h1>
+                </div>
+                {token_error_string}
+                {authenticate_form_string}
+                {created_success_string}
+                {created_error_string}
+                {new_issue_form_string}
+                <table border='1' id='issues_table' class="table table-striped">
+                    {nav_string}
+                    <caption>
+                        List of issues in Github Repo '{repo_string}'.
+                    </caption
+                    <thead>
+                        <tr>
+                            <th id='client_column'>
+                               Client Name
+                            </th>
+                            <th id='action_column'>
+                               Action item/Request
+                            </th>
+                            <th id='description_column'>
+                               Description
+                            </th>
+                            <th id='gh_column'>
+                               GH number
+                            </th>
+                            <th id='priority_column'>
+                               Priority
+                            </th>
+                            <th id='category_column'>
+                               Category
+                            </th>
+                            <th id='assigned_column'>
+                               Assigned To
+                            </th>
+                            <th id='comments_column'>
+                               Comments
+                            </th>
+                            <th id='status_column'>
+                               Status
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tbody_string}
+                    </tbody>
+                </table>
+            </section>
+        </div> <!-- container -->
     </body>
 </html>
 """
@@ -411,7 +430,7 @@ if not logged_in:
 
         nav_string = """
         <nav>
-            <ul>
+            <ul class="nav nav-pills">
                 {first_link}
                 {prev_link}
                 {next_link}
@@ -598,8 +617,8 @@ for page_link in pages:
     else:
         tbody_string = """
         <tr>
-            <td colspan='9'>
-                Error: Not able to retrieve issues data from Github. This
+            <td colspan='9' class="alert alert-warning" role="alert">
+                <strong>Error:</strong> Not able to retrieve issues data from Github. This
                 may be because you have exceeded the maximum request limit
                 of 60 requests per hour for an anonymous user. Log in to
                 increase your limit to 5000 requests per hour.
@@ -612,13 +631,14 @@ for page_link in pages:
 if logged_in:
     authenticate_form_string = """
     <form id='authenticate_form' method="POST">
-        <fieldset>
+        <fieldset class="form-group">
             <legend>
-                You are currently logged in.
+                You are logged in.
             </legend>
-                <input type="hidden" name="token" value="">
-                </input>
-                <input type="submit" id="logout_button" value="Log Out">
+            <input type="hidden" name="token" value="">
+            </input>
+            <input type="submit" id="logout_button" value="Log Out"
+            class="btn">
         </fieldset>
     </form>
     """
@@ -626,18 +646,36 @@ if logged_in:
 else:
     authenticate_form_string = """
     <form id='authenticate_form' method="POST">
-        <fieldset>
+        <fieldset class="form-group">
             <legend>
                 Log in to add a new issue or view all issues on a single page.
             </legend>
-            <label>40 Character OAuth Token:
-                <input type="text" name="token" required
-                placeholder="eg: e529880b2b81d98cc28a802a3bdbf32ce98a0d47">
-                </input>
-            </label>
-            <input type="submit" value="Log In" id="log_in_button">
-            <p>
-                <em>Please be patient after logging in.</em> Displaying all issues on a
+            <table class="table table-condensed">
+                <tr>
+                    <th>
+                        <label for="token">
+                            40 Character OAuth Token:
+                        </label>
+                    </th>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text" name="token" required id="token"
+                        placeholder=
+                        "eg: e529880b2b81d98cc28a802a3bdbf32ce98a0d47">
+                        </input>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="submit" value="Log In" id="log_in_button"
+                        class="btn">
+                    </td>
+                </tr>
+
+            </table>
+            <p class="alert alert-info" role="alert">
+                <strong>Please be patient after logging in.</strong> Displaying all issues on a
                 single page can take up to a full minute or longer.
             </p>
         </fieldset>
@@ -648,64 +686,82 @@ else:
 if logged_in:
     new_issue_form_string = """
     <form id="new_issue_form" method="POST">
-        <fieldset>
+        <fieldset class="form-group">
 
             <legend>
                Create a New Issue
             </legend>
 
-            <label for="client_input">
-                Client:
-            </label>
-            <select id="client_input" name="client_input">
-                {client_options}
-            </select>
+            <table class="table table-condensed">
+                <tr>
+                    <th>
+                        <label for="client_input"> Client: </label>
+                    </th>
+                    <th>
+                        <label for="action_input">Action:</label>
+                    </th>
+                    <th>
+                        <label for="description_input">Description:</label>
+                    </th>
+                    <th>
+                        <label for="priority_input">Priority:</label>
+                    </th>
+                    <th>
+                        <label for="category_input">Category:</label>
+                    </th>
+                    <th>
+                        <label for="assigned_input">Assigned To:</label>
+                    </th>
+                    <th>
+                        <label for="status_input">Status:</label>
+                    </th>
+                    <th>
+                    </th>
+                </tr>
+                <tr>
+                    <td>
+                        <select id="client_input" name="client_input">
+                            {client_options}
+                        </select>
+                    </td>
+                    <td>
+                        <input name="action_input" id ="action_input" required>
+                        </input>
+                    </td>
+                    <td>
+                        <textarea id="description_input"
+                        name="description_input" ></textarea>
+                    </td>
+                    <td>
+                        <select id="priority_input" name="priority_input">
+                            {priority_options}
+                        </select>
+                    </td>
+                    <td>
+                        <select id="category_input" name="category_input">
+                            {category_options}
+                        </select>
+                    </td>
+                    <td>
+                        <input name="assigned_input" id ="assigned_input">
+                        </input>
+                    </td>
+                    <td>
+                        <select id="status_input" name="status_input">
+                            {status_options}
+                        </select>
+                    </td>
+                </tr>
+                <tr colspan="7">
+                    <td>
+                        <input type='hidden' name='token' value='{token}'>
+                        </input>
 
-            <label for="action_input">
-                Action:
-            </label>
-            <input name="action_input" id ="action_input" required>
-            </input>
-
-            <label for="description_input">
-                Description:
-            </label>
-            <textarea id="description_input" name="description_input">
-            </textarea>
-
-            <label for="priority_input">
-                Priority:
-            </label>
-            <select id="priority_input" name="priority_input">
-                {priority_options}
-            </select>
-
-            <label for="category_input">
-                Category:
-            </label>
-            <select id="category_input" name="category_input">
-                {category_options}
-            </select>
-
-            <label for="assigned_input">
-                Assigned To:
-            </label>
-            <input name="assigned_input" id ="assigned_input">
-            </input>
-
-            <label for="status_input">
-                Status:
-            </label>
-            <select id="status_input" name="status_input">
-                {status_options}
-            </select>
-
-            <input type='hidden' name='token' value='{token}'>
-            </input>
-
-            <input type='submit' id="new_issue_submit_button"
-            value='Create New Issue'>
-            </input>
+                        <input type='submit' id="new_issue_submit_button"
+                        value='Create New Issue' class="btn">
+                        </input>
+                    </td>
+                </tr>
         </fieldset>
     </form>
     """
